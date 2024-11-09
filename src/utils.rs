@@ -9,12 +9,13 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-use super::state::Cell;
+use crate::cells::Cell;
 
 /**
- * Hades, the god of the underworld. 
- * Only he can determine one to be alive or dead
+ * "Hades, the god of the underworld. Only he can determine one to be alive or dead"
  *
+ * determine the state of a cell in the next epoch given its neightours states
+ * 
  * the law of hades
  * 1. Any live cell with fewer than two live neighbours dies, as if caused by underpopulation.
  * 2. Any live cell with two or three live neighbours lives on to the next generation.
@@ -33,8 +34,8 @@ pub fn hades(is_alive: Cell, living_neightbours: u8) -> Cell {
 
 #[cfg(test)]
 mod hades_test {
-    use super::hades;
-    use super::super::state::Cell;
+    use crate::utils::hades;
+    use crate::cells::Cell;
     #[test]
     fn test_hades() {
         assert_eq!(hades(Cell::Alive, 1), Cell::Dead);
