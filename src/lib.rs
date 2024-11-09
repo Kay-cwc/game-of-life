@@ -1,3 +1,3 @@
-mod cells;
+pub mod cells;
 mod utils;
-mod universe;
+pub mod universe;

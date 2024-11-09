@@ -2,7 +2,7 @@ use std::fmt;
 
 use wasm_bindgen::prelude::*;
 
-use crate::cells::Cell;
+use crate::{cells::Cell, utils::set_panic_hook};
 
 #[wasm_bindgen]
 pub struct Universe {
@@ -13,13 +13,6 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn new(width: u32, height: u32) -> Universe {
-        Universe {
-            width, height,
-            cells: vec![Cell::Dead; (width * height) as usize],
-        }
-    }
-
     pub fn init_cells(&mut self, initial_cells: Vec<[u32; 2]>) {
         let mut cells = self.cells.clone();
         for [row, col] in initial_cells {
@@ -28,10 +21,6 @@ impl Universe {
         }
 
         self.cells = cells;
-    }
-
-    pub fn render(&self) -> String {
-        self.to_string()
     }
 
     pub fn cells_to_arr(&self) -> Vec<u8> {
@@ -61,12 +50,36 @@ impl Universe {
     }
 }
 
+#[wasm_bindgen]
+impl Universe {
+    pub fn new(width: u32, height: u32) -> Universe {
+        Universe {
+            width, height,
+            cells: vec![Cell::Dead; (width * height) as usize],
+        }
+    }
+
+    /**
+     * provide a binding for js array.
+     * calls `init_cell` before validate the data can be seraialised into Vec[u32; 2]
+     */
+    pub fn init_single_cell(&mut self, row: u32, col: u32) {
+        self.init_cells(vec![[row, col]]);
+    }
+
+    pub fn render(&self) -> String {
+        self.to_string()
+    }
+}
+
 impl fmt::Display for Universe { 
     /**
      * convert the one dimension cells vectors into a human-readable string
      * which display ◼ for alive and ◻ for dead in a multi-line format
      */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        set_panic_hook();
+
         let chunks = self.cells.chunks(self.width as usize).into_iter().enumerate();
         for (idx, chunk) in chunks {
             for cell in chunk {
@@ -81,11 +94,6 @@ impl fmt::Display for Universe {
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, wasm-game-of-life!");
 }
 
 #[cfg(test)]
@@ -125,6 +133,15 @@ mod tests {
     #[test]
     fn test_display() {
         let mut universe = Universe::new(2,2);
+        assert_eq!(universe.to_string(), format!(
+            "{}{}\n{}{}", 
+            Cell::Dead.to_string(),
+            Cell::Dead.to_string(),
+            Cell::Dead.to_string(),
+            Cell::Dead.to_string(),
+        ));
+
+
         let initial_cells = [[0,0], [1,1]];
         universe.init_cells(initial_cells.to_vec());
 
